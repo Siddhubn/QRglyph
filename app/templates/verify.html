@@ -5,122 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QRglyph - Verify QR</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-      /* Unique neon-glow hyperlink styling */
-      a, a:visited {
-        color: #00ff99;
-        text-decoration: none;
-        font-weight: bold;
-        border-bottom: 2px solid #00ff99cc;
-        box-shadow: 0 2px 10px #00ff99aa;
-        transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
-        border-radius: 3px;
-        padding: 0 0.1em;
-      }
-      a:hover, a:focus {
-        color: #111;
-        background: #00ff99;
-        border-bottom: 2px solid #fff;
-        box-shadow: 0 0 18px #00ff99, 0 0 2px #fff;
-        text-shadow: 0 0 6px #00ff99, 0 0 2px #fff;
-      }
-      /* Custom file input styling */
-      input[type="file"]::-webkit-file-upload-button {
-        background: #00ff00;
-        color: #111;
-        border: none;
-        border-radius: 8px;
-        padding: 0.7rem 1.5rem;
-        font-size: 1.1rem;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 0 8px #00ff00aa;
-        margin-right: 1em;
-        transition: background 0.2s, color 0.2s;
-      }
-      input[type="file"]::file-selector-button {
-        background: #00ff00;
-        color: #111;
-        border: none;
-        border-radius: 8px;
-        padding: 0.7rem 1.5rem;
-        font-size: 1.1rem;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 0 8px #00ff00aa;
-        margin-right: 1em;
-        transition: background 0.2s, color 0.2s;
-      }
-      input[type="file"]:hover::-webkit-file-upload-button,
-      input[type="file"]:hover::file-selector-button {
-        background: #111;
-        color: #00ff00;
-      }
-      /* Ensure navbar is fixed at top and content is below it for desktop/tablet */
-      .navbar {
-        width: 100vw;
-        max-width: 100vw;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 0.2em;
-        padding: 0.5em 0;
-        margin-bottom: 1.2em;
-        box-shadow: 0 2px 18px #00ff0033;
-        z-index: 100;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(90deg, rgba(10,30,10,0.7) 0%, rgba(20,60,20,0.5) 100%);
-        backdrop-filter: blur(12px) saturate(1.5);
-        -webkit-backdrop-filter: blur(12px) saturate(1.5);
-        border-radius: 0 0 18px 18px;
-        border: 1.5px solid rgba(0,255,0,0.08);
-        transition: background 0.3s, box-shadow 0.3s;
-        animation: fadeInDown 0.7s cubic-bezier(.23,1.02,.32,1);
-        will-change: opacity, transform;
-      }
-      .container {
-        margin-top: 4.5em;
-      }
-      @media (max-width: 700px) {
-        .navbar {
-          position: fixed;
-          bottom: 0;
-          top: auto;
-          left: 0;
-          right: 0;
-          margin-bottom: 0;
-          border-radius: 0;
-          box-shadow: 0 -2px 12px #00ff0033;
-          padding: 0.2em 0;
-          background: rgba(10, 30, 10, 0.99);
-          backdrop-filter: none;
-          -webkit-backdrop-filter: none;
-          border: none;
-        }
-        .container {
-          margin-top: 1.2em;
-          margin-bottom: 4.5em;
-        }
-      }
-        .qr-card { background: rgba(20,40,20,0.9); border-radius: 16px; box-shadow: 0 0 20px #00ff00aa; padding: 1.5rem; margin: 1rem auto; min-width: 260px; max-width: 340px; text-align: center; }
-        .qr-card img { max-width: 180px; background: #fff; border-radius: 10px; box-shadow: 0 0 8px #00ff00; }
-    </style>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='qrglyph_logo.png') }}">
 </head>
 <body>
-    <nav class="navbar">
-        <a href="/" class="{% if request.path == '/' %}active{% endif %}">Home</a>
+        <nav class="navbar">
+        <a href="/home" class="{% if request.path == '/home' %}active{% endif %}">Home</a>
+        <a href="/" class="{% if request.path == '/' %}active{% endif %}">Single QR</a>
         <a href="/multi" class="{% if request.path.startswith('/multi') %}active{% endif %}">Multi</a>
         <a href="/verify" class="{% if request.path == '/verify' %}active{% endif %}">Image</a>
         <a href="/verify/camera" class="{% if request.path == '/verify/camera' %}active{% endif %}">Camera</a>
     </nav>
-    <div class="container">
-        <h1>Verify QR</h1>
+        <div class="page-wrapper">
+            <div class="container">
+        <div class="app-header">
+            <img src="{{ url_for('static', filename='qrglyph_logo.png') }}" alt="QRglyph logo" class="app-logo">
+            <h1>Verify QR</h1>
+        </div>
         <form method="POST" enctype="multipart/form-data">
             <label for="qr-image">Upload QR Image:</label>
-            <input type="file" id="qr-image" name="qr-image" accept="image/*" required>
+            <div class="file-input">
+                <label class="file-btn" for="qr-image">Choose file</label>
+                <input type="file" id="qr-image" name="qr-image" accept="image/*" required class="hidden-file">
+                <span class="file-name" id="qr-upload-name">No file chosen</span>
+            </div>
             <button type="submit">Verify</button>
         </form>
         {% if result %}
@@ -145,10 +52,24 @@
                 </div>
             {% endif %}
         {% endif %}
-        <div style="margin-top:2em;"><a href="/">← Single QR Generator</a> | <a href="/multi">Multi QR</a></div>
-    </div>
+                <div class="link-row" role="navigation" aria-label="secondary navigation">
+                    <a href="/">Single QR Gen</a>
+                    <span class="sep">|</span>
+                    <a href="/multi">Multi QR Gen</a>
+                    <span class="sep">|</span>
+                    <a href="/verify/camera">Scan QR</a>
+                </div>
+            </div>
+        </div>
     <script src="{{ url_for('static', filename='main.js') }}"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function(){
+    const qrInput = document.getElementById('qr-image');
+    const qrName = document.getElementById('qr-upload-name');
+    if (qrInput){
+        qrInput.addEventListener('change', ()=>{ const f = qrInput.files && qrInput.files[0]; qrName.textContent = f?f.name:'No file chosen'});
+    }
+});
 // Share QR code for the user-provided content, not the decoded result
 function shareQR(qrImage, userContent) {
     if (navigator.share) {

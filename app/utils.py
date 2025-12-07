@@ -3,7 +3,6 @@ QRglyph Utility Functions
 """
 import qrcode
 from PIL import Image
-from pyzbar.pyzbar import decode
 import requests
 import re
 import os
@@ -22,30 +21,58 @@ def generate_qr(data, fill_color='black', back_color='white', logo_path=None):
                 logo = logo_path
             else:
                 logo = Image.open(logo_path)
-            # Resize logo to fit in the center (max 1/3 of QR size)
+            # Resize logo to fit in the center (reduce size to improve scan reliability)
             qr_w, qr_h = img.size
-            logo_size = min(qr_w, qr_h) // 3
+            # Use a conservative logo ratio so the logo doesn't obscure too many modules
+            # Reduce further to improve scan reliability on more devices
+            logo_ratio = 0.22
+            logo_size = max(16, int(min(qr_w, qr_h) * logo_ratio))
+            # Ensure logo has alpha channel for masking
+            logo = logo.convert('RGBA')
             logo = logo.resize((logo_size, logo_size), Image.LANCZOS)
-            # Center the logo
-            pos = ((qr_w - logo_size) // 2, (qr_h - logo_size) // 2)
-            if logo.mode in ('RGBA', 'LA'):
-                img.paste(logo, pos, mask=logo)
-            else:
-                img.paste(logo, pos)
+
+            # Optional subtle white backing to improve contrast
+            # Keep backing padding minimal so fewer QR modules are obscured
+            bg_pad = int(max(2, logo_size * 0.04))
+            bg_size = logo_size + (bg_pad * 2)
+            bg = Image.new('RGBA', (bg_size, bg_size), (255, 255, 255, 255))
+
+            # Compute positions
+            bg_pos = ((qr_w - bg_size) // 2, (qr_h - bg_size) // 2)
+            logo_pos = ((qr_w - logo_size) // 2, (qr_h - logo_size) // 2)
+
+            # Paste backing then logo using alpha masks
+            img = img.convert('RGBA')
+            img.paste(bg, bg_pos, mask=bg)
+            img.paste(logo, logo_pos, mask=logo)
+            img = img.convert('RGB')
         except Exception as e:
             logging.warning(f"Logo embedding failed: {e}")
     return img
 
 def decode_qr(image):
-    # Decode QR code from PIL Image
-    decoded = decode(image)
-    if decoded:
-        return decoded[0].data.decode('utf-8')
-    return None
-    # Decode QR code from PIL Image
-    decoded = decode(image)
-    if decoded:
-        return decoded[0].data.decode('utf-8')
+    """
+    Decode a QR code from a PIL Image.
+
+    This function performs a lazy import of `pyzbar` so that the
+    application can start even when the system `zbar` library is not
+    installed. If `pyzbar` (and the underlying `zbar` shared library)
+    are not available the function will return `None` instead of raising
+    an ImportError.
+    """
+    try:
+        # Import here to avoid failing app import when zbar is missing
+        from pyzbar.pyzbar import decode as _decode
+    except Exception:
+        logging.warning('pyzbar or zbar not available; QR decoding disabled')
+        return None
+
+    try:
+        decoded = _decode(image)
+        if decoded:
+            return decoded[0].data.decode('utf-8')
+    except Exception as e:
+        logging.warning(f'QR decode failed: {e}')
     return None
 
 def expand_url(url):

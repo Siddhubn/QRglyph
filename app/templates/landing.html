@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>QRglyph — Smart QR generation & verification</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='qrglyph_logo.png') }}">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/home" class="{% if request.path == '/home' %}active{% endif %}">Home</a>
+    <a href="/" class="{% if request.path == '/' %}active{% endif %}">Single QR</a>
+    <a href="/multi" class="{% if request.path.startswith('/multi') %}active{% endif %}">Multi</a>
+    <a href="/verify" class="{% if request.path == '/verify' %}active{% endif %}">Image</a>
+    <a href="/verify/camera" class="{% if request.path == '/verify/camera' %}active{% endif %}">Camera</a>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="container">
+      <section class="landing-hero">
+        <img src="{{ url_for('static', filename='qrglyph_logo.png') }}" alt="QRglyph" class="landing-logo">
+        <div class="hero-text">
+          <h1>QRglyph</h1>
+          <p class="tagline">Generate, verify and share QR codes with confidence — simple, local, and secure.</p>
+          <div class="hero-cta">
+            <a class="btn" href="/">Get Started (Single)</a>
+            <a class="btn secondary" href="/multi">Multi QR</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="features">
+        <div class="feature">
+          <h3>Generate</h3>
+          <p>Create high-contrast QR codes, optionally embed a small logo, and download or share them instantly.</p>
+        </div>
+        <div class="feature">
+          <h3>Verify</h3>
+          <p>Upload or scan QR images — local trust analysis flags suspicious or dangerous links.</p>
+        </div>
+        <div class="feature">
+          <h3>Mobile Ready</h3>
+          <p>Camera-based scanning with a clean, animated UI and consent flow for suspicious URLs.</p>
+        </div>
+      </section>
+
+      <div class="link-row">
+        <a href="/verify">Verify an uploaded QR</a>
+        <span class="sep">|</span>
+        <a href="/verify/camera">Use camera to scan</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

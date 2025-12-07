@@ -132,3 +132,40 @@ def verify_camera():
         else:
             result = {'error': 'No QR content received.'}
     return render_template('verify_camera.html', result=result)
+
+
+@main_bp.route('/api/verify_qr', methods=['POST'])
+def api_verify_qr():
+    """API endpoint used by camera page to verify scanned QR content.
+    Returns JSON with trust result and whether content looks like a URL.
+    For safety, when the content is determined 'dangerous' the URL is not echoed back.
+    """
+    data = request.get_json(silent=True) or {}
+    qr_content = data.get('qr_content') or request.form.get('qr_content')
+    if not qr_content:
+        return jsonify({'error': 'No qr_content provided.'}), 400
+
+    trust = trust_check(qr_content)
+    # Basic URL detection
+    is_url = False
+    url_value = None
+    if isinstance(qr_content, str) and qr_content.strip().lower().startswith(('http://', 'https://')):
+        is_url = True
+        url_value = qr_content.strip()
+
+    resp = {
+        'decoded': qr_content if trust.get('score') != 'dangerous' else None,
+        'trust': trust,
+        'is_url': is_url
+    }
+    # Only include the URL text for safe or suspicious; exclude for dangerous
+    if is_url and trust.get('score') in ('safe', 'suspicious'):
+        resp['url'] = url_value
+
+    return jsonify(resp)
+
+
+# Landing / Home page for product overview
+@main_bp.route('/home', methods=['GET'])
+def home_landing():
+    return render_template('landing.html')

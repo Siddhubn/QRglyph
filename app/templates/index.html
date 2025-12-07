@@ -5,326 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QRglyph - QR Code Generator</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-      /* Unique neon-glow hyperlink styling */
-      a, a:visited {
-        color: #00ff99;
-        text-decoration: none;
-        font-weight: bold;
-        border-bottom: 2px solid #00ff99cc;
-        box-shadow: 0 2px 10px #00ff99aa;
-        transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
-        border-radius: 3px;
-        padding: 0 0.1em;
-      }
-      a:hover, a:focus {
-        color: #111;
-        background: #00ff99;
-        border-bottom: 2px solid #fff;
-        box-shadow: 0 0 18px #00ff99, 0 0 2px #fff;
-        text-shadow: 0 0 6px #00ff99, 0 0 2px #fff;
-      }
-      /* Custom file input styling */
-      input[type="file"]::-webkit-file-upload-button {
-        background: #00ff00;
-        color: #111;
-        border: none;
-        border-radius: 8px;
-        padding: 0.7rem 1.5rem;
-        font-size: 1.1rem;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 0 8px #00ff00aa;
-        margin-right: 1em;
-        transition: background 0.2s, color 0.2s;
-      }
-      input[type="file"]::file-selector-button {
-        background: #00ff00;
-        color: #111;
-        border: none;
-        border-radius: 8px;
-        padding: 0.7rem 1.5rem;
-        font-size: 1.1rem;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 0 8px #00ff00aa;
-        margin-right: 1em;
-        transition: background 0.2s, color 0.2s;
-      }
-      input[type="file"]:hover::-webkit-file-upload-button,
-      input[type="file"]:hover::file-selector-button {
-        background: #111;
-        color: #00ff00;
-      }
-      /* Scan QR button style for camera page */
-      .scan-btn {
-        background: #00ff00;
-        color: #111;
-        border: none;
-        border-radius: 8px;
-        padding: 0.9rem 2.2rem;
-        font-size: 1.15rem;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 0 10px #00ff00aa;
-        margin: 0.5rem 0.2rem 0 0.2rem;
-        transition: background 0.2s, color 0.2s;
-        min-width: 48px;
-        min-height: 48px;
-        touch-action: manipulation;
-      }
-      .scan-btn:hover {
-        background: #111;
-        color: #00ff00;
-      }
-      /* Animated entry keyframes */
-      @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(40px) scale(0.98); }
-        to { opacity: 1; transform: none; }
-      }
-      @keyframes fadeInScale {
-        from { opacity: 0; transform: scale(0.92); }
-        to { opacity: 1; transform: scale(1); }
-      }
-      @keyframes fadeInLeft {
-        from { opacity: 0; transform: translateX(-40px); }
-        to { opacity: 1; transform: none; }
-      }
-      @keyframes fadeInRight {
-        from { opacity: 0; transform: translateX(40px); }
-        to { opacity: 1; transform: none; }
-      }
-      .navbar {
-        width: 100vw;
-        max-width: 100vw;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 0.2em;
-        padding: 0.85em 2;
-        margin:0 0.5em;
-        margin-bottom: 1.2em;
-        box-shadow: 0 2px 18px #00ff0033;
-        z-index: 100;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(90deg, rgba(10,30,10,0.7) 0%, rgba(20,60,20,0.5) 100%);
-        backdrop-filter: blur(12px) saturate(1.5);
-        -webkit-backdrop-filter: blur(12px) saturate(1.5);
-        border-radius: 0 0 18px 18px;
-        border: 1.5px solid rgba(0,255,0,0.08);
-        transition: background 0.3s, box-shadow 0.3s;
-        animation: fadeInDown 0.7s cubic-bezier(.23,1.02,.32,1);
-        will-change: opacity, transform;
-      }
-      .container {
-        margin-top: 4.5em;
-      }
-      @media (max-width: 700px) {
-        .navbar {
-          position: fixed;
-          bottom: 0;
-          top: auto;
-          left: 0;
-          right: 0;
-          margin-bottom: 0;
-          border-radius: 0;
-          box-shadow: 0 -2px 12px #00ff0033;
-          padding: 0.2em 0;
-          background: rgba(10, 30, 10, 0.99);
-          backdrop-filter: none;
-          -webkit-backdrop-filter: none;
-          border: none;
-        }
-        .container {
-          margin-top: 1.2em;
-          margin-bottom: 4.5em;
-        }
-      }
-      body {
-        min-height: 100vh;
-        min-width: 100vw;
-        background: url('{{ url_for('static', filename='bg-green-bokeh.jpg') }}') no-repeat center center fixed;
-        background-size: cover;
-        position: relative;
-        margin: 0;
-        padding: 0;
-        font-family: 'Fira Mono', 'Consolas', monospace;
-        color: #00ff00;
-      }
-      body::before {
-        content: '';
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(10, 30, 20, 0.72);
-        z-index: 0;
-        pointer-events: none;
-      }
-      .container {
-        background: rgba(20, 40, 20, 0.92);
-        border-radius: 20px;
-        box-shadow: 0 0 30px #00ff00aa, 0 0 10px #000;
-        padding: 2rem 3vw;
-        max-width: 700px;
-        width: 100%;
-        margin: 2rem auto;
-        text-align: center;
-        position: relative;
-        z-index: 1;
-        animation: glow 2s infinite alternate, fadeInUp 0.8s cubic-bezier(.23,1.02,.32,1) 0.1s both;
-      }
-      @keyframes glow {
-        from { box-shadow: 0 0 10px #00ff0044; }
-        to { box-shadow: 0 0 30px #00ff00cc, 0 0 10px #000; }
-      }
-      h1 {
-        font-size: 2.2rem;
-        letter-spacing: 2px;
-        text-shadow: 0 0 10px #00ff00, 0 0 2px #fff;
-        margin-bottom: 1.2rem;
-      }
-      form label {
-        display: block;
-        margin: 1rem 0 0.2rem 0;
-        font-weight: bold;
-        text-align: left;
-      }
-      form input[type="text"],
-      form input[type="color"],
-      form input[type="file"] {
-        width: 100%;
-        padding: 0.7rem;
-        margin-bottom: 1rem;
-        border-radius: 8px;
-        border: none;
-        background: #111;
-        color: #00ff00;
-        font-size: 1.1rem;
-      }
-      form button, .qr-controls button, .qr-controls a button {
-        background: #00ff00;
-        color: #111;
-        border: none;
-        border-radius: 8px;
-        padding: 0.9rem 2.2rem;
-        font-size: 1.15rem;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 0 10px #00ff00aa;
-        margin: 0.5rem 0.2rem 0 0.2rem;
-        transition: background 0.2s, color 0.2s;
-        min-width: 48px;
-        min-height: 48px;
-        touch-action: manipulation;
-      }
-      form button:hover, .qr-controls button:hover, .qr-controls a button:hover {
-        background: #111;
-        color: #00ff00;
-      }
-      #qr-result {
-        margin-top: 2rem;
-        min-height: 100px;
-      }
-      .qr-card {
-        opacity: 0;
-        animation: fadeInScale 0.7s cubic-bezier(.23,1.02,.32,1) 0.2s both;
-        background: rgba(20,40,20,0.97);
-        border-radius: 16px;
-        box-shadow: 0 0 20px #00ff00aa;
-        padding: 1.5rem;
-        margin: 1rem auto;
-        min-width: 220px;
-        max-width: 340px;
-        text-align: center;
-        flex: 1 1 260px;
-      }
-      .qr-card img {
-        max-width: 180px;
-        width: 100%;
-        background: #fff;
-        border-radius: 10px;
-        box-shadow: 0 0 8px #00ff00;
-      }
-      .qr-controls {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.5em;
-        margin-top: 0.5em;
-      }
-      .trust-score {
-        margin-bottom: 1em;
-        opacity: 0;
-        animation: fadeInLeft 0.7s cubic-bezier(.23,1.02,.32,1) 0.4s both;
-      }
-        opacity: 0;
-        animation: fadeInRight 0.7s cubic-bezier(.23,1.02,.32,1) 0.6s both;
-      .qr-decoded {
-        opacity: 0;
-        animation: fadeInUp 0.7s cubic-bezier(.23,1.02,.32,1) 0.8s both;
-      }
-      .warning { color: #ff0033; font-weight: bold; }
-      pre {
-        word-break: break-all;
-        white-space: pre-wrap;
-        font-size: 1em;
-      }
-      @media (max-width: 900px) {
-        .container { max-width: 99vw; padding: 1.2rem 1vw; }
-        .qr-card { margin: 0.5rem; padding: 1rem; }
-      }
-      @media (max-width: 700px) {
-        html { font-size: 15px; }
-        .container { padding: 0.7rem 0.2rem; }
-        h1 { font-size: 1.3rem; }
-        .qr-card { min-width: 90vw; max-width: 99vw; padding: 0.7rem; }
-        form input[type="text"],
-        form input[type="color"],
-        form input[type="file"] {
-          font-size: 1rem;
-          padding: 0.6rem;
-        }
-        form button, .qr-controls button, .qr-controls a button {
-          font-size: 1rem;
-          padding: 0.7rem 1.2rem;
-          min-width: 44px;
-          min-height: 44px;
-        }
-      }
-      @media (max-width: 480px) {
-        html { font-size: 13px; }
-        .container { padding: 0.4rem 0.1rem; }
-        h1 { font-size: 1.1rem; }
-        .qr-card { min-width: 98vw; max-width: 99vw; padding: 0.5rem; }
-        form input[type="text"],
-        form input[type="color"],
-        form input[type="file"] {
-          font-size: 0.95rem;
-          padding: 0.5rem;
-        }
-        form button, .qr-controls button, .qr-controls a button {
-          font-size: 0.95rem;
-          padding: 0.5rem 0.7rem;
-          min-width: 38px;
-          min-height: 38px;
-        }
-      }
-      @media (min-width: 1200px) {
-        .container { max-width: 900px; }
-        .qr-card { max-width: 400px; }
-      }
-    </style>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='qrglyph_logo.png') }}">
 </head>
 <body>
-    <nav class="navbar">
-        <a href="/" class="{% if request.path == '/' %}active{% endif %}">Home</a>
+        <nav class="navbar">
+        <a href="/home" class="{% if request.path == '/home' %}active{% endif %}">Home</a>
+        <a href="/" class="{% if request.path == '/' %}active{% endif %}">Single QR</a>
         <a href="/multi" class="{% if request.path.startswith('/multi') %}active{% endif %}">Multi</a>
         <a href="/verify" class="{% if request.path == '/verify' %}active{% endif %}">Image</a>
         <a href="/verify/camera" class="{% if request.path == '/verify/camera' %}active{% endif %}">Camera</a>
     </nav>
-    <div class="container">
+        <div class="page-wrapper">
+            <div class="container">
         <h1>QRglyph</h1>
         <form id="qr-form" method="POST" enctype="multipart/form-data">
             <label for="qr-content">Text or URL:</label>
@@ -334,53 +26,54 @@
             <label for="bg-color">Background Color:</label>
             <input type="color" id="bg-color" name="bg-color" value="{{ form_data['bg-color'] if form_data else '#000000' }}">
             <label for="logo">Embed Logo (optional):</label>
-            <input type="file" id="logo" name="logo" accept="image/*">
+            <div class="file-input">
+                <label class="file-btn" for="logo">Choose file</label>
+                <input type="file" id="logo" name="logo" accept="image/*" class="hidden-file">
+                <span class="file-name" id="logo-name">No file chosen</span>
+            </div>
             <button type="submit">Generate QR</button>
         </form>
         <div id="qr-result">
             {% if qr_image %}
                 <div class="qr-card">
-                    <img src="data:image/png;base64,{{ qr_image }}" alt="QR Code" style="max-width: 250px; background: #fff; border-radius: 12px; box-shadow: 0 0 10px #00ff00;">
+                    <img src="data:image/png;base64,{{ qr_image }}" alt="QR Code" class="qr-image">
                     <div class="trust-score trust-{{ trust.score }}">
-                        <span style="font-size: 2rem;">{{ trust.icon }}</span>
+                        <span class="trust-icon">{{ trust.icon }}</span>
                         <strong>{{ trust.score|capitalize }}</strong>
                         <ul>
                         {% for reason in trust.reasons %}
                             <li>{{ reason }}</li>
                         {% endfor %}
                         </ul>
-                        <button type="button" class="collapse-btn" onclick="toggleDetails('trust-details')" style="margin-top:0.5em;">
+                        <button type="button" class="collapse-btn" onclick="toggleDetails('trust-details')">
                             <span id="arrow-trust-details">▼</span> Show Details
                         </button>
-                        <div id="trust-details" class="trust-details-collapsible" style="display:none;">
-                            <pre style="text-align:left;overflow-x:auto;max-width:100%;background:#181; color:#fff; border-radius:8px; padding:0.7em; font-size:0.95em; margin-top:0.5em;">
-{{ trust.details | default({}) | tojson(indent=2) }}
-                            </pre>
-                            <div style="margin-top:0.5em; font-size:0.95em; color:#bfb; background:#222; border-radius:6px; padding:0.5em;">
+                        <div id="trust-details" class="trust-details-collapsible">
+                            <pre class="trust-details-pre">{{ trust.details | default({}) | tojson(indent=2) }}</pre>
+                            <div class="trust-info">
                                 <strong>How trust is scored:</strong><br>
                                 This QR code was analyzed <b>locally</b> using pattern-based checks. No data was sent to any external service or API.<br>
-                                <ul style="margin:0.5em 0 0 1.2em;">
+                                <ul>
                                     <li>Checks for suspicious keywords, file extensions, and URL shorteners</li>
                                     <li>Flags long URLs, many subdomains, or use of IP addresses</li>
                                     <li>Detects homoglyphs and other risky patterns</li>
                                 </ul>
-                                <span style="color:#8f8;">Your privacy is protected: all trust analysis is performed on your device.</span>
+                                <span class="small-muted">Your privacy is protected: all trust analysis is performed on your device.</span>
                             </div>
                         </div>
                     </div>
                     {% if trust.score != 'safe' %}
-                        <div class="warning" style="color: #ff0033; font-weight: bold;">Warning: This QR may be unsafe. Download disabled.</div>
+                        <div class="warning">Warning: This QR may be unsafe. Download disabled.</div>
                     {% endif %}
                     <div class="qr-controls">
                         <button onclick="readQRContent('{{ form_data['qr-content']|e }}')">🔊 Read QR Content</button>
-                        <button onclick="shareQR('{{ qr_image }}', '{{ decoded|e }}')">📤 Share</button>
-                        <a href="data:image/png;base64,{{ qr_image }}" download="qrglyph.png">
-                            <button {% if trust.score != 'safe' %}disabled{% endif %}>⬇️ Download</button>
-                        </a>
+                        <button id="share-btn" onclick="shareQR('{{ qr_image }}', '{{ decoded|e }}')" {% if trust.score != 'safe' %}disabled{% endif %}>📤 Share</button>
+                        <button id="download-btn" onclick="downloadQR('{{ qr_image }}','qrglyph.png')" {% if trust.score != 'safe' %}disabled{% endif %}>⬇️ Download</button>
+                        <div id="consent-area-home" style="display:none;width:100%;margin-top:.6rem;text-align:center"></div>
                     </div>
                     <div class="qr-decoded">
                         <strong>Decoded Content:</strong>
-                        <pre style="background: #111; color: #0f0; padding: 0.5em; border-radius: 8px;">{{ decoded }}</pre>
+                        <pre class="decoded-pre">{{ decoded }}</pre>
                     </div>
                 </div>
             {% endif %}
@@ -389,6 +82,68 @@
     <script src="{{ url_for('static', filename='main.js') }}"></script>
 </div>
 <script>
+    // File input preview for index page
+    document.addEventListener('DOMContentLoaded', function(){
+        const logoInput = document.getElementById('logo');
+        const logoName = document.getElementById('logo-name');
+        if (logoInput){
+            logoInput.addEventListener('change', function(){
+                const f = this.files && this.files[0];
+                logoName.textContent = f ? f.name : 'No file chosen';
+            });
+        }
+    });
+    // Helpers for home consent and download/share handling
+    function downloadQR(dataB64, filename){
+        try{
+            const byteString = atob(dataB64);
+            const ia = new Uint8Array(byteString.length);
+            for (let i=0;i<byteString.length;i++) ia[i]=byteString.charCodeAt(i);
+            const blob = new Blob([ia], {type:'image/png'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename || 'qrglyph.png';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }catch(e){
+            alert('Download failed');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function(){
+        const trustScore = '{{ trust.score if trust else "" }}';
+        const decoded = `{{ decoded|e }}`;
+        const consentEl = document.getElementById('consent-area-home');
+        const shareBtn = document.getElementById('share-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        if (trustScore === 'suspicious'){
+            consentEl.style.display = 'block';
+            consentEl.innerHTML = `
+                <div class="qr-card" style="padding:.6rem">
+                  <div style="font-weight:800;color:var(--muted);">Suspicious link detected</div>
+                  <div style="margin-top:.4rem;word-break:break-all;">${decoded}</div>
+                  <div style="margin-top:.6rem;display:flex;gap:.6rem;justify-content:center">
+                    <button id="consent-home-go" class="btn">Proceed</button>
+                    <button id="consent-home-no" class="btn ghost">Cancel</button>
+                  </div>
+                </div>
+            `;
+            document.getElementById('consent-home-go').addEventListener('click', function(){
+                if (shareBtn) shareBtn.disabled = false;
+                if (downloadBtn) downloadBtn.disabled = false;
+                consentEl.innerHTML = '<div style="color:var(--muted);font-weight:700">Proceeding — options enabled.</div>';
+            });
+            document.getElementById('consent-home-no').addEventListener('click', function(){
+                consentEl.innerHTML = '<div style="color:var(--danger);font-weight:800">Cancelled. Share & Download remain disabled.</div>';
+            });
+        } else if (trustScore === 'dangerous'){
+            if (shareBtn) shareBtn.disabled = true;
+            if (downloadBtn) downloadBtn.disabled = true;
+        }
+    });
 function toggleDetails(id) {
     var el = document.getElementById(id);
     var arrow = document.getElementById('arrow-' + id);

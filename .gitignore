@@ -20,3 +20,7 @@ Thumbs.db
 *.jpg
 *.jpeg
 *.svg
+
+*.yaml
+.gitignore
+*env

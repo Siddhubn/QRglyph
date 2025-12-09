@@ -177,10 +177,10 @@ pre{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Fira Mono', monos
 .trust-icon{font-size:2rem}
 .collapse-btn{margin-top:0.5rem;background:transparent;border:none;color:var(--muted);cursor:pointer;font-weight:700}
 .trust-details-collapsible{display:none}
-.trust-details-pre{text-align:left;overflow-x:auto;max-width:100%;background:#181;color:#fff;border-radius:8px;padding:0.7em;font-size:0.95em;margin-top:0.5em}
+.trust-details-pre{text-align:left;overflow-x:auto;max-width:100%;background:#181;color:#fff;border-radius:8px;padding:0.7em;font-size:0.95em;margin-top:0.5em;white-space:pre-wrap;white-space:-moz-pre-wrap;white-space:-o-pre-wrap;word-wrap:break-word;overflow-wrap:anywhere;word-break:break-word}
 .trust-info{margin-top:0.5em;font-size:0.95em;color:#bfb;background:#222;border-radius:6px;padding:0.5em}
 .trust-info ul{margin:0.5em 0 0 1.2em}
-.decoded-pre{background:#111;color:#0f0;padding:0.5em;border-radius:8px}
+.decoded-pre{background:#111;color:#0f0;padding:0.5em;border-radius:8px;white-space:pre-wrap;white-space:-moz-pre-wrap;white-space:-o-pre-wrap;word-wrap:break-word;overflow-wrap:anywhere;word-break:break-word;max-width:100%;}
 .small-muted{color:#8f8}
 .input-card{background:#111;border-radius:10px;padding:1em;min-width:220px}
 .input-card{display:flex;flex-direction:column;gap:.5rem}
@@ -211,6 +211,10 @@ pre{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Fira Mono', monos
   .link-row{flex-wrap:wrap;gap:.4rem;padding:0 .6rem}
   .link-row .sep{display:none}
 }
+
+/* Google Safe Browsing badge */
+.gsb-badge{display:inline-block;margin-left:.6rem;padding:.18rem .5rem;border-radius:8px;background:rgba(255,200,0,0.08);color:#ffd38a;font-weight:800;font-size:0.78rem;border:1px solid rgba(255,200,0,0.09)}
+.gsb-badge.gsb-flagged{background:linear-gradient(180deg, rgba(255,50,50,0.12), rgba(255,50,50,0.06));color:var(--danger);border-color:rgba(255,50,50,0.12)}
 
 /* App header and logo (not in navbar) */
 .app-header{display:flex;align-items:center;gap:1rem;margin-bottom:0.6rem}

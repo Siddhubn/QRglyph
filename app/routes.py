@@ -3,7 +3,8 @@
 QRglyph Routes
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify, current_app
-from .utils import generate_qr, decode_qr, trust_check, expand_url
+from .utils import generate_qr, decode_qr, trust_check, expand_url, gsb_check
+import copy
 from PIL import Image
 import io
 import base64
@@ -34,6 +35,39 @@ def index():
         if not decoded:
             decoded = data
         trust = trust_check(decoded or '')
+        # Preserve the original local trust check so we can show both results
+        trust_local = copy.deepcopy(trust)
+        trust['local'] = trust_local
+        # Mark whether GSB was checked and store results separately; do not overwrite local results unless GSB flags.
+        trust['gsb_checked'] = False
+        try:
+                # Determine URL to check (supports bare domains detected by trust_check)
+                url_to_check = None
+                if isinstance(decoded, str):
+                    s = decoded.strip()
+                    if s.lower().startswith(('http://', 'https://')):
+                        url_to_check = s
+                    else:
+                        details = trust_local.get('details', {})
+                        canonical = details.get('canonical_urls') or []
+                        if canonical:
+                            url_to_check = canonical[0]
+                if url_to_check and trust_local.get('score') != 'dangerous':
+                    trust['gsb_checked'] = True
+                    gsb_matches = gsb_check(url_to_check.strip())
+                    # Always attach the raw GSB response (may be empty)
+                    trust['gsb'] = gsb_matches or {}
+                    trust['gsb_flagged'] = bool(gsb_matches)
+                    if gsb_matches:
+                        # annotate trust with GSB results and escalate the overall score
+                        trust['reasons'] = list(trust_local.get('reasons', [])) + ['Flagged by Google Safe Browsing']
+                        trust['details'] = dict(trust_local.get('details', {}))
+                        trust['details']['gsb_matches'] = gsb_matches
+                        trust['score'] = 'dangerous'
+                        trust['icon'] = '\u274C'
+        except Exception:
+            # keep original trust if GSB check fails
+            trust['gsb_checked'] = False
         return render_template('index.html',
             qr_image=img_b64,
             decoded=decoded,
@@ -74,6 +108,34 @@ def multi_qr():
                 if not decoded:
                     decoded = data
                 trust = trust_check(decoded or '')
+                trust_local = copy.deepcopy(trust)
+                trust['local'] = trust_local
+                trust['gsb_checked'] = False
+                try:
+                    # Determine URL to check (supports bare domains detected by trust_check)
+                    url_to_check = None
+                    if isinstance(decoded, str):
+                        s = decoded.strip()
+                        if s.lower().startswith(('http://', 'https://')):
+                            url_to_check = s
+                        else:
+                            details = trust_local.get('details', {})
+                            canonical = details.get('canonical_urls') or []
+                            if canonical:
+                                url_to_check = canonical[0]
+                    if url_to_check and trust_local.get('score') != 'dangerous':
+                        trust['gsb_checked'] = True
+                        gsb_matches = gsb_check(url_to_check.strip())
+                        trust['gsb'] = gsb_matches or {}
+                        trust['gsb_flagged'] = bool(gsb_matches)
+                        if gsb_matches:
+                            trust['reasons'] = list(trust_local.get('reasons', [])) + ['Flagged by Google Safe Browsing']
+                            trust['details'] = dict(trust_local.get('details', {}))
+                            trust['details']['gsb_matches'] = gsb_matches
+                            trust['score'] = 'dangerous'
+                            trust['icon'] = '\u274C'
+                except Exception:
+                    trust['gsb_checked'] = False
                 qr_results.append({
                     'label': label,
                     'qr_image': img_b64,
@@ -102,6 +164,34 @@ def verify_qr():
                 if not decoded:
                     decoded = ''
                 trust = trust_check(decoded or '')
+                trust_local = copy.deepcopy(trust)
+                trust['local'] = trust_local
+                trust['gsb_checked'] = False
+                try:
+                    # Determine URL to check (supports bare domains detected by trust_check)
+                    url_to_check = None
+                    if isinstance(decoded, str):
+                        s = decoded.strip()
+                        if s.lower().startswith(('http://', 'https://')):
+                            url_to_check = s
+                        else:
+                            details = trust_local.get('details', {})
+                            canonical = details.get('canonical_urls') or []
+                            if canonical:
+                                url_to_check = canonical[0]
+                    if url_to_check and trust_local.get('score') != 'dangerous':
+                        trust['gsb_checked'] = True
+                        gsb_matches = gsb_check(url_to_check.strip())
+                        trust['gsb'] = gsb_matches or {}
+                        trust['gsb_flagged'] = bool(gsb_matches)
+                        if gsb_matches:
+                            trust['reasons'] = list(trust_local.get('reasons', [])) + ['Flagged by Google Safe Browsing']
+                            trust['details'] = dict(trust_local.get('details', {}))
+                            trust['details']['gsb_matches'] = gsb_matches
+                            trust['score'] = 'dangerous'
+                            trust['icon'] = '\u274C'
+                except Exception:
+                    trust['gsb_checked'] = False
                 buf = io.BytesIO()
                 img.save(buf, format='PNG')
                 buf.seek(0)
@@ -125,6 +215,34 @@ def verify_camera():
         qr_content = request.form.get('qr-content')
         if qr_content:
             trust = trust_check(qr_content)
+            trust_local = copy.deepcopy(trust)
+            trust['local'] = trust_local
+            trust['gsb_checked'] = False
+            try:
+                # Determine URL to check (supports bare domains detected by trust_check)
+                url_to_check = None
+                if isinstance(qr_content, str):
+                    s = qr_content.strip()
+                    if s.lower().startswith(('http://', 'https://')):
+                        url_to_check = s
+                    else:
+                        details = trust_local.get('details', {})
+                        canonical = details.get('canonical_urls') or []
+                        if canonical:
+                            url_to_check = canonical[0]
+                if url_to_check and trust_local.get('score') != 'dangerous':
+                    trust['gsb_checked'] = True
+                    gsb_matches = gsb_check(url_to_check.strip())
+                    trust['gsb'] = gsb_matches or {}
+                    trust['gsb_flagged'] = bool(gsb_matches)
+                    if gsb_matches:
+                        trust['reasons'] = list(trust_local.get('reasons', [])) + ['Flagged by Google Safe Browsing']
+                        trust['details'] = dict(trust_local.get('details', {}))
+                        trust['details']['gsb_matches'] = gsb_matches
+                        trust['score'] = 'dangerous'
+                        trust['icon'] = '\u274C'
+            except Exception:
+                trust['gsb_checked'] = False
             result = {
                 'decoded': qr_content,
                 'trust': trust
@@ -146,6 +264,34 @@ def api_verify_qr():
         return jsonify({'error': 'No qr_content provided.'}), 400
 
     trust = trust_check(qr_content)
+    trust_local = copy.deepcopy(trust)
+    trust['local'] = trust_local
+    trust['gsb_checked'] = False
+    try:
+        # Determine URL to check (supports bare domains detected by trust_check)
+        url_to_check = None
+        if isinstance(qr_content, str):
+            s = qr_content.strip()
+            if s.lower().startswith(('http://', 'https://')):
+                url_to_check = s
+            else:
+                details = trust_local.get('details', {})
+                canonical = details.get('canonical_urls') or []
+                if canonical:
+                    url_to_check = canonical[0]
+        if url_to_check and trust_local.get('score') != 'dangerous':
+            trust['gsb_checked'] = True
+            gsb_matches = gsb_check(url_to_check.strip())
+            trust['gsb'] = gsb_matches or {}
+            trust['gsb_flagged'] = bool(gsb_matches)
+            if gsb_matches:
+                trust['reasons'] = list(trust_local.get('reasons', [])) + ['Flagged by Google Safe Browsing']
+                trust['details'] = dict(trust_local.get('details', {}))
+                trust['details']['gsb_matches'] = gsb_matches
+                trust['score'] = 'dangerous'
+                trust['icon'] = '\u274C'
+    except Exception:
+        trust['gsb_checked'] = False
     # Basic URL detection
     is_url = False
     url_value = None

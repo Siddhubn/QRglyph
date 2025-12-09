@@ -70,30 +70,45 @@
                 <div class="qr-label">{{ qr.label }}</div>
                 <img src="data:image/png;base64,{{ qr.qr_image }}" alt="QR Code" class="qr-image">
                 <div class="trust-score trust-{{ qr.trust.score }}">
-                    <div style="display:flex;align-items:center;gap:.6rem">
-                      <span class="trust-icon">{{ qr.trust.icon }}</span>
-                      <strong>{{ qr.trust.score|capitalize }}</strong>
-                    </div>
-                    <ul>
-                    {% for reason in qr.trust.reasons %}
-                        <li>{{ reason }}</li>
-                    {% endfor %}
-                    </ul>
-                    <button type="button" class="collapse-btn" onclick="toggleDetails('trust-details-{{ loop.index0 }}')">
-                        <span id="arrow-trust-details-{{ loop.index0 }}">▼</span> Show Details
-                    </button>
-                    <div id="trust-details-{{ loop.index0 }}" class="trust-details-collapsible">
-                        <pre class="trust-details-pre">{{ qr.trust.details | default({}) | tojson(indent=2) }}</pre>
-                        <div class="trust-info">
-                            <strong>How trust is scored:</strong>
-                            <div>This QR code was analyzed <b>locally</b> using pattern-based checks. No data was sent to any external service or API.</div>
-                            <ul>
-                                <li>Checks for suspicious keywords, file extensions, and URL shorteners</li>
-                                <li>Flags long URLs, many subdomains, or use of IP addresses</li>
-                                <li>Detects homoglyphs and other risky patterns</li>
-                            </ul>
-                            <span class="small-muted">Your privacy is protected: all trust analysis is performed on your device.</span>
+                    {% if qr.trust.local %}
+                        <div style="text-align:center">
+                            <span class="trust-icon">{{ qr.trust.local.icon }}</span>
+                            <strong>Local: {{ qr.trust.local.score|capitalize }}</strong>
+                            <button type="button" class="collapse-btn" onclick="toggleDetails('trust-details-local-{{ loop.index0 }}')">
+                                <span id="arrow-trust-details-local-{{ loop.index0 }}">▼</span> Details
+                            </button>
+                            <div id="trust-details-local-{{ loop.index0 }}" class="trust-details-collapsible">
+                                <ul>
+                                {% for reason in qr.trust.local.reasons %}
+                                    <li>{{ reason }}</li>
+                                {% endfor %}
+                                </ul>
+                                <pre class="trust-details-pre">{{ qr.trust.local.details | default({}) | tojson(indent=2) }}</pre>
+                            </div>
                         </div>
+                    {% else %}
+                        <div style="display:flex;align-items:center;gap:.6rem">
+                          <span class="trust-icon">{{ qr.trust.icon }}</span>
+                          <strong>{{ qr.trust.score|capitalize }}</strong>
+                        </div>
+                    {% endif %}
+
+                    <div style="margin-top:.4rem;text-align:center">
+                        {% if qr.trust.gsb_checked %}
+                            {% if qr.trust.gsb_flagged %}
+                                <span class="gsb-badge gsb-flagged" title="Flagged by Google Safe Browsing">GSB: Flagged</span>
+                                <button type="button" class="collapse-btn" onclick="toggleDetails('trust-details-gsb-{{ loop.index0 }}')">
+                                    <span id="arrow-trust-details-gsb-{{ loop.index0 }}">▼</span> GSB
+                                </button>
+                                <div id="trust-details-gsb-{{ loop.index0 }}" class="trust-details-collapsible">
+                                    <pre class="trust-details-pre">{{ qr.trust.gsb | default({}) | tojson(indent=2) }}</pre>
+                                </div>
+                            {% else %}
+                                <span class="gsb-badge">GSB: Clean</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="small-muted">GSB: not checked</span>
+                        {% endif %}
                     </div>
                 </div>
                 {% if qr.trust.score != 'safe' %}

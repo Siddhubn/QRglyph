@@ -37,13 +37,44 @@
                 <div class="qr-card" style="margin-top:2em;">
                     <img src="data:image/png;base64,{{ result.qr_image }}" alt="QR Code">
                     <div class="trust-score trust-{{ result.trust.score }}">
-                        <span style="font-size: 2rem;">{{ result.trust.icon }}</span>
-                        <strong>{{ result.trust.score|capitalize }}</strong>
-                        <ul>
-                        {% for reason in result.trust.reasons %}
-                            <li>{{ reason }}</li>
-                        {% endfor %}
-                        </ul>
+                        {% if result.trust.local %}
+                            <div style="text-align:center">
+                                <span style="font-size:2rem">{{ result.trust.local.icon }}</span>
+                                <strong>Local: {{ result.trust.local.score|capitalize }}</strong>
+                                <button type="button" class="collapse-btn" onclick="toggleDetails('trust-details-local-verify')">
+                                    <span id="arrow-trust-details-local-verify">▼</span> Details
+                                </button>
+                                <div id="trust-details-local-verify" class="trust-details-collapsible">
+                                    <ul>
+                                    {% for reason in result.trust.local.reasons %}
+                                        <li>{{ reason }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                    <pre class="trust-details-pre">{{ result.trust.local.details | default({}) | tojson(indent=2) }}</pre>
+                                </div>
+                            </div>
+                        {% else %}
+                            <span style="font-size: 2rem;">{{ result.trust.icon }}</span>
+                            <strong>{{ result.trust.score|capitalize }}</strong>
+                        {% endif %}
+
+                        <div style="margin-top:.4rem;text-align:center">
+                            {% if result.trust.gsb_checked %}
+                                {% if result.trust.gsb_flagged %}
+                                    <span class="gsb-badge gsb-flagged" title="Flagged by Google Safe Browsing">GSB: Flagged</span>
+                                    <button type="button" class="collapse-btn" onclick="toggleDetails('trust-details-gsb-verify')">
+                                        <span id="arrow-trust-details-gsb-verify">▼</span> GSB details
+                                    </button>
+                                    <div id="trust-details-gsb-verify" class="trust-details-collapsible">
+                                        <pre class="trust-details-pre">{{ result.trust.gsb | default({}) | tojson(indent=2) }}</pre>
+                                    </div>
+                                {% else %}
+                                    <span class="gsb-badge">GSB: Clean</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="small-muted">GSB: not checked</span>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="qr-decoded">
                         <strong>Decoded Content:</strong>

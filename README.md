@@ -117,6 +117,25 @@ Open these pages in your browser:
 
 `render.yaml` is included for an optional Render deployment.
 
+## Deploying to Render
+
+1. Create a new Web Service on Render and connect your repository.
+2. In the Render service settings, set environment variables (securely):
+   - `SECRET_KEY` (required)
+   - `GSB_API_KEY` (optional — provide here if you want Google Safe Browsing checks)
+   - `FLASK_ENV=production` (recommended)
+3. `render.yaml` already configures the start command to use the runtime `$PORT` and install requirements. The service will start using:
+
+```bash
+gunicorn -w 4 -b 0.0.0.0:$PORT app:app
+```
+
+4. Optional: If you prefer, add an entry for `GSB_API_KEY` in the Render env panel instead of in the repo.
+
+Notes:
+- The app factory loads environment variables via `python-dotenv` in development; on Render you should set env vars in the service dashboard so secrets are kept out of the codebase.
+- If you need server-side QR decoding, install `libzbar0` as part of a custom build or use a Render instance image that includes it. Without `zbar`, server-side decoding is skipped gracefully.
+
 ## File structure (important files)
 
 ```

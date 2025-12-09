@@ -183,8 +183,9 @@
     function handleVerificationResult(data, scanned){
         const trust = data.trust || {};
         const score = (trust.score || 'unknown');
-        // Show a result card
+        // Show a result card with both local and GSB stage results
         let html = '<div class="result-card">';
+        // Overall score badge
         if (score === 'safe'){
             html += '<div style="color:var(--accent);font-weight:800;font-size:1.05rem;">✔ Safe</div>';
         } else if (score === 'suspicious'){
@@ -194,12 +195,35 @@
         } else {
             html += '<div style="font-weight:800;">Result: ' + escapeHtml(score) + '</div>';
         }
-        // show limited details
-        if (trust.reasons && trust.reasons.length){
-            html += '<ul style="text-align:left;margin:.5rem 0 0 1rem;color:var(--muted);">';
-            for (const r of trust.reasons.slice(0,6)) html += '<li>' + escapeHtml(r) + '</li>';
-            html += '</ul>';
+
+        // Local (stage-1) result
+        if (trust.local){
+            const local = trust.local;
+            html += '<div style="margin-top:0.5rem;text-align:left"><strong>Local check:</strong> ' + escapeHtml((local.score||'').toString()) + ' <span style="margin-left:.4rem">' + escapeHtml(local.icon||'') + '</span>';
+            if (local.reasons && local.reasons.length){
+                html += '<ul style="margin:.4rem 0 0 1rem;color:var(--muted);">';
+                for (const r of local.reasons.slice(0,6)) html += '<li>' + escapeHtml(r) + '</li>';
+                html += '</ul>';
+            }
+            if (local.details){
+                try{ html += '<pre class="trust-details-pre">' + escapeHtml(JSON.stringify(local.details, null, 2)) + '</pre>'; }catch(e){}
+            }
+            html += '</div>';
         }
+
+        // GSB (stage-2) result
+        if (trust.gsb_checked){
+            if (trust.gsb_flagged){
+                html += '<div style="margin-top:0.4rem;"><span class="gsb-badge gsb-flagged">GSB: Flagged</span>';
+                try{ html += '<pre class="trust-details-pre">' + escapeHtml(JSON.stringify(trust.gsb || {}, null, 2)) + '</pre>'; }catch(e){}
+                html += '</div>';
+            } else {
+                html += '<div style="margin-top:0.4rem;"><span class="gsb-badge">GSB: Clean</span></div>';
+            }
+        } else {
+            html += '<div style="margin-top:0.4rem;"><span class="small-muted">GSB: not checked</span></div>';
+        }
+
         html += '</div>';
         scanResult.innerHTML = html;
 
@@ -209,13 +233,12 @@
         const overlay = document.querySelector('.scanner-overlay');
         if (overlay) overlay.classList.add('detected');
 
-        if (score === 'safe' && data.is_url && data.url){
-            // Immediately redirect to the safe URL
+        // Only auto-redirect when both local stage and GSB stage pass
+        if (data.is_url && data.url && trust.local && trust.local.score === 'safe' && trust.gsb_checked === true && !trust.gsb_flagged){
             try{
                 statusEl.textContent = 'Safe — redirecting...';
                 window.location.assign(data.url);
             }catch(e){
-                // Fallback: set href which should also navigate
                 window.location.href = data.url;
             }
             return;

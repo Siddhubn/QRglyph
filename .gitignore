@@ -16,7 +16,6 @@ __pycache__/
 Thumbs.db
 
 # QR Images
-*.png
 *.jpg
 *.jpeg
 *.svg

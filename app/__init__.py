@@ -18,3 +18,16 @@ def create_app():
     from .routes import main_bp
     app.register_blueprint(main_bp)
     return app
+
+
+# Expose a top-level Flask instance for WSGI servers that reference `app:app`.
+# Some hosts or existing start commands may still point to `app:app` instead
+# of `wsgi:app`. Creating this at import-time ensures compatibility.
+try:
+    app = create_app()
+except Exception:
+    # If initialization fails at import time (missing env, optional deps),
+    # avoid crashing module import. WSGI servers will raise errors on startup
+    # anyway; this keeps import-time effects minimal.
+    app = None
+
